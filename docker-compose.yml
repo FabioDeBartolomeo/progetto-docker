@@ -1,0 +1,33 @@
+networks:
+  backend-net:
+    driver: bridge
+
+volumes:
+  db-data:
+    driver: local
+
+services:
+  # DB isolato: raggiungibile solo da Nginx tramite rete interna (no porte esposte su host)
+  db-service:
+    image: mysql:8.0
+    container_name: mysql-enterprise
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: PasswordSicura2026!
+      MYSQL_DATABASE: produzione_db
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - backend-net
+
+  # Web Server: Unico punto di accesso dall'esterno (porta 80)
+  web-service:
+    image: nginx:latest
+    container_name: nginx-frontend
+    restart: always
+    ports:
+      - "80:80"
+    networks:
+      - backend-net
+    depends_on:
+      - db-service
