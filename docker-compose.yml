@@ -27,6 +27,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
     networks:
       - backend-net
     depends_on:
