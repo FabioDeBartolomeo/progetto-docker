@@ -1,12 +1,22 @@
 #!/bin/bash
 
-# Definisco il percorso della cartella del progetto (un livello sopra la cartella script)
+# Configurazione percorsi relativi stabili
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$PROJECT_DIR" || exit 1
 
 case "$1" in
     start)
+        echo "Raccolta metriche dal nodo host..."
+        HOST_IP=$(hostname -I | awk '{print $1}')
+        HOST_UPTIME=$(uptime -p)
+
+        echo "Generazione pagina index.html dinamica..."
+        # Raddoppiate le graffe per intercettare il testo esatto del template
+        sed -e "s|{{IP_PRIVATO}}|$HOST_IP|g" \
+            -e "s|{{UPTIME}}|$HOST_UPTIME|g" \
+            index.html.template > index.html
+
         echo "Avvio dell'infrastruttura in background..."
         sudo docker compose up -d
         ;;
