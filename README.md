@@ -5,20 +5,6 @@ Questo laboratorio dimostra la transizione da una gestione infrastrutturale manu
 
 ---
 
-## Struttura del Repository
-
-progetto-docker/
-├── archive_logs/             # Directory dei backup dei log in formato tar.gz
-├── scripts/                  # Script Bash di automazione e orchestrazione
-│   ├── backup-logs.sh        # Automazione estrazione e rotazione log
-│   └── manage-stack.sh       # Script di gestione ciclo di vita dei container
-├── docker-compose.yml        # Configurazione dichiarativa dei servizi
-├── index.html                # Frontend generato dinamicamente (IP/Uptime)
-├── index.html.template       # File modello (Template) con i segnaposto
-└── README.md                 # Documentazione tecnica del laboratorio
-
----
-
 ## Architettura dei Servizi (Docker Compose)
 
 L'infrastruttura è suddivisa in due livelli isolati tramite una rete bridge dedicata (backend-net):
