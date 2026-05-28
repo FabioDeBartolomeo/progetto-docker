@@ -1,39 +1,39 @@
-# Cloud Home Lab: Docker & Automation
+# Containerized Architecture & Infrastructure Automation
 
 ## Scopo del Progetto
-Questo laboratorio dimostra la transizione da una gestione infrastrutturale manuale a un modello automatizzato (DevOps), applicando i concetti di isolamento di rete, persistenza dello storage, iniezione dinamica dei dati e log management su ambiente Linux Debian.
+Questo progetto documenta la configurazione di un ambiente infrastrutturale isolato (Sandbox) per dimostrare la transizione da una gestione sistemistica manuale a un modello orientato alle metodologie DevOps. Il focus è incentrato sull'isolamento di rete, la persistenza dello storage, l'iniezione dinamica dei dati a tempo di runtime e le politiche di log management su piattaforma Linux Debian.
 
 ---
 
 ## Architettura dei Servizi (Docker Compose)
 
-L'infrastruttura è suddivisa in due livelli isolati tramite una rete bridge dedicata (backend-net):
+L'infrastruttura è suddivisa in due livelli architetturali isolati tramite una rete bridge dedicata (backend-net):
 
-* **Frontend (nginx-frontend):** Espone la porta 80. Serve la pagina di status dinamica. Configurato con un Bind Mount del file ./index.html in sola lettura (:ro). Connesso a backend-net.
-* **Backend (mysql-enterprise):** Database MySQL 8.0. Isolato dall'esterno (nessuna porta esposta sulla macchina host). Utilizza un Docker Volume (db-data) per la persistenza dei dati. Connesso a backend-net.
+* **Frontend (nginx-frontend):** Espone la porta HTTP 80 sul nodo ospitante. Serve la pagina di status dinamica. Configurato con un Bind Mount del file ./index.html in modalità sola lettura (:ro) per preservare l'integrità del container. Connesso alla rete backend-net.
+* **Backend (mysql-enterprise):** Database relazionale MySQL 8.0. Completamente isolato dal traffico esterno (nessuna porta mappata sulla macchina host). Utilizza un Docker Volume gestito (db-data) per garantire la persistenza dei dati e la consistenza dello storage. Connesso alla rete backend-net.
 
 ---
 
 ## Logica delle Automazioni (/scripts)
 
-### 1. Avvio Dinamico (manage-stack.sh)
-Centralizza l'orchestrazione ed evita la staticità del frontend.
-* **Cosa fa:** Prima di sollevare i container, interroga il kernel dell'host ricavando l'IP privato e l'uptime di sistema. Tramite sed, inietta questi dati reali nel file index.html.template generando l'output index.html definitivo letto da Nginx.
+### 1. Controllo Stack e Deploy Dinamico (manage-stack.sh)
+Centralizza l'orchestrazione dei servizi ed evita la staticità dei dati applicativi nel frontend.
+* **Funzionamento:** Prima di invocare il sollevamento dei container, lo script interroga direttamente il kernel dell'host ricavando l'indirizzo IP privato dell'interfaccia di rete e l'uptime di sistema. Tramite lo stream editor 'sed', inietta queste metriche reali nel file index.html.template, generando l'output index.html definitivo che verrà letto da Nginx all'avvio.
 * **Uso:** ./scripts/manage-stack.sh {start|stop|status}
 
-### 2. Retention dei Log (backup-logs.sh)
-Previene la saturazione del disco isolando i log dai container.
-* **Cosa fa:** Estrae i flussi unificati (stdout e stderr tramite 2>&1) da Nginx. Salva i dati in un file temporaneo, li comprime in un archivio tar.gz nominato con timestamp sicuro (YYYY-MM-DD_HH-MM-SS) e pulisce l'area di lavoro spostando l'archivio in archive_logs/.
+### 2. Log Retention e Lifecycle Management (backup-logs.sh)
+Implementa le policy di sicurezza per prevenire la saturazione del disco sul nodo ospitante.
+* **Funzionamento:** Intercetta ed estrae i flussi di output unificati (stdout e stderr tramite ridirezione 2>&1) dal container Nginx in produzione. Centralizza i dati in un file temporaneo, esegue la compressione in formato tar.gz applicando un timestamp sicuro per il file system (YYYY-MM-DD_HH-MM-SS) e sposta l'archivio finale nella directory archive_logs/, eseguendo il wipe dei dati temporanei.
 * **Uso:** ./scripts/backup-logs.sh
 
 ---
 
-## Comandi Utili per l'Analisi dei Log (CLI Parsing)
+## Strumenti di Analisi Log via CLI (Parsing di Rete)
 
-Filtri rapidi utilizzati in console per attività di Auditing e Troubleshooting:
+Sintassi dei comandi nativi Linux utilizzati in console per attività di Auditing, Troubleshooting e verifica degli accessi:
 
-* **Isolamento traffico HTTP (Esclusione avvisi di sistema):**
+* **Isolamento del traffico HTTP (Esclusione dei messaggi di sistema notice):**
   sudo docker logs nginx-frontend 2>&1 | grep "GET"
 
-* **Estrazione e conteggio degli IP univoci dei visitatori:**
+* **Estrazione ed elencazione degli indirizzi IP univoci dei client connessi:**
   sudo docker logs nginx-frontend 2>&1 | grep "GET" | awk '{print $1}' | sort -u
