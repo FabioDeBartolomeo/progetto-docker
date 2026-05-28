@@ -17,8 +17,8 @@
         <p>Fabio De Bartolomeo - Infrastructure & Cloud Engineer</p>
         <hr>
         <p>Stato Host Ospitante (nota: all'avvio dei servizi):</p>
-        <p>IP Privato: <span class="status-item">192.168.71.110</span></p>
-        <p>Uptime: <span class="status-item">up 15 hours, 9 minutes</span></p>
+        <p>IP Privato: <span class="status-item">{{IP_PRIVATO}}</span></p>
+        <p>Uptime: <span class="status-item">{{UPTIME}}</span></p>
     </div>
 </body>
 </html>

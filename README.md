@@ -1,22 +1,23 @@
-# Infrastruttura a due livelli Isolata con Docker Compose
+# Laboratorio Infrastrutturale: Docker Compose & Automation
 
-## Descrizione del Progetto
-Questo laboratorio implementa un'architettura infrastrutturale a due livelli (Two-Tier) standard del settore, mirata alla segregazione dei ruoli e alla persistenza dei dati, minimizzando la superficie di attacco esterna.
+Ambiente di laboratorio locale focalizzato sulla containerizzazione di un'architettura web/database ed automazione dei processi di gestione e manutenzione log tramite scripting Bash.
 
-L'ambiente è composto da:
-1. **Front-end (Web Server):** Un container Nginx esposto sulla porta standard HTTP (80) dell'host.
-2. **Back-end (Database):** Un container MySQL 8.0 completamente isolato dall'esterno.
+## Architettura dello Stack
 
-## Architettura di Rete e Sicurezza
-* **Segregazione:** I container comunicano all'interno di una rete virtuale isolata con driver `bridge` (`backend-net`).
-* **Isolamento del DB:** La porta nativa di MySQL (`3306`) e la porta del protocollo X (`33060`) **non sono mappate** verso l'host. Il database è accessibile esclusivamente dal container Nginx tramite risoluzione DNS interna di Docker, azzerando i vettori di attacco diretti dall'esterno.
+L'infrastruttura è orchestrata tramite Docker Compose ed è composta da due servizi isolati in una rete dedicata:
 
-## Gestione dello Storage e Persistenza
-I dati del database sono protetti tramite un volume logico locale (`db-data`) mappato direttamente sulla directory di sistema `/var/lib/mysql` del container. Questo garantisce la persistenza del dato anche in caso di distruzione, aggiornamento o manutenzione evolutiva del container stesso.
+* **Web Server (Frontend):** Container Nginx esposto sulla porta host 80. Gestisce le richieste web e serve una pagina di status dinamica. I dati sensibili dell'host (IP e Uptime) vengono iniettati nel container tramite bind mount in sola lettura (`:ro`).
+* **Database (Backend):** Container MySQL enterprise isolato all'interno della rete interna (`backend-net`), non accessibile direttamente dall'esterno. La persistenza dei dati è garantita da un volume Docker gestito.
 
-## Comandi Operativi (CLI)
-Per l'amministrazione e il deployment dell'infrastruttura sono stati utilizzati i seguenti comandi da terminale Linux:
+## Automazione e Gestione (Cartella `/scripts`)
 
-* **Avvio in background (Detached mode):**
-  ```bash
-  sudo docker compose up -d
+Il ciclo di vita dell'infrastruttura e le operazioni di manutenzione sono completamente automatizzati tramite script in Bash:
+
+### 1. Gestione dello Stack (`manage-stack.sh`)
+Centralizza l'orchestrazione dei container e la manipolazione dinamica del frontend. 
+* All'avvio (`start`), lo script raccoglie in tempo reale l'IP privato dell'interfaccia di rete dell'host e l'uptime di sistema, iniettandoli tramite `sed` all'interno del template HTML (`index.html.template`) prima di sollevare i container.
+* Gestisce in modo nativo i comandi di interruzione (`stop`) e verifica stato (`status`).
+
+Uso:
+```bash
+./scripts/manage-stack.sh {start|stop|status}
